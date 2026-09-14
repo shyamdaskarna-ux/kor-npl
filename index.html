@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Korean-Nepali Dictionary</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & React-DOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Compiler CDN -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- SheetJS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Excel Sheet बाट Permanent थपिएका शब्दहरू (Chapter 50)
+    const initialData = [
+      { "id": 1, "kr": "산림 자원 조성", "np": "वन स्रोत निर्माण", "category": "", "chapter": 50 },
+      { "id": 2, "kr": "집재장", "np": "काठ राख्ने ठाउँ", "category": "", "chapter": 50 },
+      { "id": 3, "kr": "굴취 작업", "np": "उखेल्ने काम", "category": "", "chapter": 50 },
+      { "id": 4, "kr": "분감기 작업", "np": "जरा र्यापिङको काम", "category": "", "chapter": 50 },
+      { "id": 5, "kr": "벌목 작업", "np": "रुख काट्ने काम", "category": "", "chapter": 50 },
+      { "id": 6, "kr": "조경수 재배", "np": "ल्याण्डस्केप रुख खेती", "category": "", "chapter": 50 },
+      { "id": 7, "kr": "분재 재배", "np": "बोन्साई खेती", "category": "", "chapter": 50 },
+      { "id": 8, "kr": "임산물 채취", "np": "वनजन्य वस्तु सङ्कलन", "category": "", "chapter": 50 },
+      { "id": 9, "kr": "송이 채취", "np": "च्याउ सङ्कलन", "category": "", "chapter": 50 },
+      { "id": 10, "kr": "잣 채취", "np": "पाइन नट सङ्कलन", "category": "", "chapter": 50 },
+      { "id": 11, "kr": "산나물 채취", "np": "जङ्गली सागसब्जी सङ्कलन", "category": "", "chapter": 50 },
+      { "id": 12, "kr": "수목 관리", "np": "रुखको व्यवस्थापन", "category": "", "chapter": 50 },
+      { "id": 13, "kr": "가지치기", "np": "हाँगा काट्ने काम (Pruning)", "category": "", "chapter": 50 },
+      { "id": 14, "kr": "풀베기", "np": "घाँस काट्ने काम", "category": "", "chapter": 50 },
+      { "id": 15, "kr": "임도 개설", "np": "वन क्षेत्रमा बाटो निर्माण", "category": "", "chapter": 50 },
+      { "id": 16, "kr": "목재 생산", "np": "काठ उत्पादन", "category": "", "chapter": 50 },
+      { "id": 17, "kr": "원목 절단", "np": "गोलिया काठ काट्ने", "category": "", "chapter": 50 },
+      { "id": 18, "kr": "집재", "np": "काठ सङ्कलन", "category": "", "chapter": 50 },
+      { "id": 19, "kr": "운재", "np": "काठ ओसारपसार", "category": "", "chapter": 50 },
+      { "id": 20, "kr": "묘목", "np": "बिरुवा", "category": "", "chapter": 50 },
+      { "id": 21, "kr": "조경수", "np": "बगैँचामा रोपिने रुख", "category": "", "chapter": 50 },
+      { "id": 22, "kr": "원목", "np": "गोलिया काठ", "category": "", "chapter": 50 },
+      { "id": 23, "kr": "장작", "np": "दाउरा", "category": "", "chapter": 50 },
+      { "id": 24, "kr": "톱밥", "np": "काठको धुलो (Sawdust)", "category": "", "chapter": 50 },
+      { "id": 25, "kr": "송이버섯", "np": "पाइन च्याउ", "category": "", "chapter": 50 },
+      { "id": 26, "kr": "잣", "np": "पाइन नट", "category": "", "chapter": 50 },
+      { "id": 27, "kr": "산나물", "np": "जङ्गली सागसब्जी", "category": "", "chapter": 50 },
+      { "id": 28, "kr": "기계톱 (체인소)", "np": "चेनस' (Chain saw)", "category": "", "chapter": 50 },
+      { "id": 29, "kr": "전정톱", "np": "हाँगा काट्ने आरी", "category": "", "chapter": 50 },
+      { "id": 30, "kr": "전정가위", "np": "हाँगा काट्ने कैँची", "category": "", "chapter": 50 },
+      { "id": 31, "kr": "굴착기 (포크레인)", "np": "डोजर/एक्सकाभेटर", "category": "", "chapter": 50 },
+      { "id": 32, "kr": "집재기", "np": "काठ तान्ने मेसिन", "category": "", "chapter": 50 },
+      { "id": 33, "kr": "운재차", "np": "काठ ओसार्ने गाडी", "category": "", "chapter": 50 },
+      { "id": 34, "kr": "곡괭이", "np": "गैँती", "category": "", "chapter": 50 },
+      { "id": 35, "kr": "삽", "np": "बेल्चा", "category": "", "chapter": 50 },
+      { "id": 36, "kr": "괭이", "np": "कुदाली", "category": "", "chapter": 50 },
+      { "id": 37, "kr": "예초기", "np": "घाँस काट्ने मेसिन", "category": "", "chapter": 50 },
+      { "id": 38, "kr": "박피기", "np": "बोक्रा खोल्ने मेसिन", "category": "", "chapter": 50 },
+      { "id": 39, "kr": "파쇄기", "np": "टुक्राउने मेसिन", "category": "", "chapter": 50 },
+      { "id": 40, "kr": "목재 펠릿", "np": "काठको दाना (Pellets)", "category": "", "chapter": 50 },
+      { "id": 41, "kr": "안전모", "np": "सुरक्षा हेलमेट", "category": "", "chapter": 50 },
+      { "id": 42, "kr": "안전화", "np": "सुरक्षा जुत्ता", "category": "", "chapter": 50 },
+      { "id": 43, "kr": "안전장갑", "np": "सुरक्षा पञ्जा", "category": "", "chapter": 50 },
+      { "id": 44, "kr": "보안경", "np": "सुरक्षा चश्मा", "category": "", "chapter": 50 },
+      { "id": 45, "kr": "귀덮개", "np": "कान ढाम्ने (Ear muff)", "category": "", "chapter": 50 },
+      { "id": 46, "kr": "방진마스크", "np": "धुलो रोक्ने मास्क", "category": "", "chapter": 50 },
+      { "id": 47, "kr": "벌목용 안면보호구", "np": "रुख काट्दा लगाउने अनुहार सुरक्षक", "category": "", "chapter": 50 },
+      { "id": 48, "kr": "체인소 방호복", "np": "चेनस' बाट बच्ने सुरक्षा कपडा", "category": "", "chapter": 50 },
+      { "id": 49, "kr": "무전기", "np": "वाकी-टाकी (Walkie-talkie)", "category": "", "chapter": 50 },
+      { "id": 50, "kr": "구급함", "np": "प्राथमिक उपचार बाकस", "category": "", "chapter": 50 },
+      { "id": 51, "kr": "안전거리 유지", "np": "सुरक्षित दूरी कायम गर्ने", "category": "", "chapter": 50 },
+      { "id": 52, "kr": "신호 확인", "np": "साङ्केतिक इसारा चेक गर्ने", "category": "", "chapter": 50 },
+      { "id": 53, "kr": "대피로 확보", "np": "भाग्ने बाटो सुरक्षित गर्ने", "category": "", "chapter": 50 },
+      { "id": 54, "kr": "점검", "np": "निरीक्षण/चेकजाँच", "category": "", "chapter": 50 },
+      { "id": 55, "kr": "정비", "np": "मर्मतसम्भार", "category": "", "chapter": 50 },
+      { "id": 56, "kr": "연료 보충", "np": "इन्धन थप्ने", "category": "", "chapter": 50 },
+      { "id": 57, "kr": "윤활유 주입", "np": "मोबिल/लुब्रिकेन्ट हाल्ने", "category": "", "chapter": 50 },
+      { "id": 58, "kr": "날 갈기", "np": "धार लगाउने", "category": "", "chapter": 50 },
+      { "id": 59, "kr": "시동 걸기", "np": "स्टार्ट गर्ने", "category": "", "chapter": 50 },
+      { "id": 60, "kr": "작업 중지", "np": "काम रोक्ने", "category": "", "chapter": 50 },
+      { "id": 61, "kr": "경사지 작업", "np": "अग्लो/भिरालो ठाउँको काम", "category": "", "chapter": 50 },
+      { "id": 62, "kr": "미끄러짐 주의", "np": "चिप्लने खतराबाट सावधान", "category": "", "chapter": 50 },
+      { "id": 63, "kr": "낙석 주의", "np": "ढुङ्गा खस्ने खतराबाट सावधान", "category": "", "chapter": 50 },
+      { "id": 64, "kr": "낙목 주의", "np": "रुख खस्ने खतराबाट सावधान", "category": "", "chapter": 50 },
+      { "id": 65, "kr": "벌목 방향 확인", "np": "रुख ढल्ने दिशा यकिन गर्ने", "category": "", "chapter": 50 },
+      { "id": 66, "kr": "수형 조절", "np": "रुखको आकार मिलाउने", "category": "", "chapter": 50 },
+      { "id": 67, "kr": "병충해 방제", "np": "कीरा तथा रोग नियन्त्रण", "category": "", "chapter": 50 },
+      { "id": 68, "kr": "소독 작업", "np": "कीटाणुशोधन काम", "category": "", "chapter": 50 },
+      { "id": 69, "kr": "시비 작업", "np": "मल हाल्ने काम", "category": "", "chapter": 50 },
+      { "id": 70, "kr": "관수 작업", "np": "सिँचाइ गर्ने काम", "category": "", "chapter": 50 },
+      { "id": 71, "kr": "복토 작업", "np": "माटो पुर्ने काम", "category": "", "chapter": 50 },
+      { "id": 72, "kr": "지주목 설치", "np": "टेको (Support) राख्ने काम", "category": "", "chapter": 50 },
+      { "id": 73, "kr": "결속 작업", "np": "बाँध्ने काम", "category": "", "chapter": 50 },
+      { "id": 74, "kr": "포장 작업", "np": "प्याकिङ गर्ने काम", "category": "", "chapter": 50 },
+      { "id": 75, "kr": "적재 작업", "np": "लोड गर्ने काम", "category": "", "chapter": 50 },
+      { "id": 76, "kr": "하차 작업", "np": "अनलोड गर्ने काम", "category": "", "chapter": 50 },
+      { "id": 77, "kr": "선별 작업", "np": "छान्ने काम", "category": "", "chapter": 50 },
+      { "id": 78, "kr": "등급 분류", "np": "गुणस्तर वर्गीकरण", "category": "", "chapter": 50 },
+      { "id": 79, "kr": "건조 작업", "np": "सुकाउने काम", "category": "", "chapter": 50 },
+      { "id": 80, "kr": "보관 작업", "np": "भण्डारण गर्ने काम", "category": "", "chapter": 50 },
+      { "id": 81, "kr": "출하 작업", "np": "बजार पठाउने काम", "category": "", "chapter": 50 },
+      { "id": 82, "kr": "조림", "np": "वृक्षारोपण", "category": "", "chapter": 50 },
+      { "id": 83, "kr": "육림", "np": "वन हुर्काउने काम", "category": "", "chapter": 50 },
+      { "id": 84, "kr": "채벌", "np": "रुख कटान", "category": "", "chapter": 50 },
+      { "id": 85, "kr": "간벌", "np": "पातलो बनाउन रुख काट्ने (Thinning)", "category": "", "chapter": 50 },
+      { "id": 86, "kr": "수확", "np": "बाली/उत्पादन भित्र्याउने", "category": "", "chapter": 50 },
+      { "id": 87, "kr": "운반", "np": "ओसारपसार", "category": "", "chapter": 50 },
+      { "id": 88, "kr": "하역", "np": "लोड-अनलोड", "category": "", "chapter": 50 },
+      { "id": 89, "kr": "적재", "np": "लोडिङ", "category": "", "chapter": 50 },
+      { "id": 90, "kr": "결속", "np": "बाँध्ने/बन्डिङ", "category": "", "chapter": 50 },
+      { "id": 91, "kr": "고정", "np": "फिक्स गर्ने/कसैराख्ने", "category": "", "chapter": 50 },
+      { "id": 92, "kr": "해체", "np": "खोल्ने/विच्छेदन", "category": "", "chapter": 50 },
+      { "id": 93, "kr": "청소", "np": "सरसफाइ", "category": "", "chapter": 50 },
+      { "id": 94, "kr": "정리정돈", "np": "मिलाएर राख्ने", "category": "", "chapter": 50 },
+      { "id": 95, "kr": "안전점검", "np": "सुरक्षा जाँच", "category": "", "chapter": 50 },
+      { "id": 96, "kr": "위험 요소", "np": "खतराको तत्व", "category": "", "chapter": 50 },
+      { "id": 97, "kr": "사고 예방", "np": "दुर्घटना रोकथाम", "category": "", "chapter": 50 },
+      { "id": 98, "kr": "응급처치", "np": "प्राथमिक उपचार", "category": "", "chapter": 50 },
+      { "id": 99, "kr": "비상연락", "np": "आपतकालीन सम्पर्क", "category": "", "chapter": 50 },
+      { "id": 100, "kr": "작업 일지", "np": "कामको डायरी/लग", "category": "", "chapter": 50 },
+      { "id": 101, "kr": "수량 확인", "np": "परिमाण जाँच गर्ने", "category": "", "chapter": 50 },
+      { "id": 102, "kr": "품질 확인", "np": "गुणस्तर जाँच गर्ने", "category": "", "chapter": 50 }
+    ];
+
+    const SECRET_PASSKEY = "1234";
+
+    function App() {
+      const [words, setWords] = useState(() => {
+        const savedWords = localStorage.getItem('korean_dictionary_app');
+        return savedWords ? JSON.parse(savedWords) : initialData;
+      });
+
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedChapter, setSelectedChapter] = useState('All');
+      const [selectedIds, setSelectedIds] = useState([]);
+
+      // Form States
+      const [krInput, setKrInput] = useState('');
+      const [npInput, setNpInput] = useState('');
+      const [catInput, setCatInput] = useState('');
+      const [chapterInput, setChapterInput] = useState('');
+      const [editingId, setEditingId] = useState(null);
+
+      useEffect(() => {
+        localStorage.setItem('korean_dictionary_app', JSON.stringify(words));
+      }, [words]);
+
+      // Pronunciation Function
+      const speakKorean = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ko-KR';
+          utterance.rate = 0.82;
+          utterance.pitch = 1.0;
+
+          const voices = window.speechSynthesis.getVoices();
+          const koreanVoice = voices.find(v => v.lang.includes('ko') || v.lang.includes('KO'));
+          if (koreanVoice) {
+            utterance.voice = koreanVoice;
+          }
+
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert("तपाईंको ब्राउजरमा Voice Sound सपोर्ट गरेन।");
+        }
+      };
+
+      // Form Submit (Add / Edit)
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!krInput.trim() || !npInput.trim()) {
+          alert("कृपया कोरियाली र नेपाली दुवै अर्थ लेख्नुहोस्!");
+          return;
+        }
+
+        const chapNum = chapterInput !== '' ? parseInt(chapterInput) : '';
+
+        if (editingId !== null) {
+          setWords(words.map(w => 
+            w.id === editingId 
+              ? { ...w, kr: krInput.trim(), np: npInput.trim(), category: catInput.trim() || "", chapter: chapNum }
+              : w
+          ));
+          setEditingId(null);
+          alert("शब्द सम्पादन गरियो (Updated)!");
+        } else {
+          const newEntry = {
+            id: Date.now(),
+            kr: krInput.trim(),
+            np: npInput.trim(),
+            category: catInput.trim() || "",
+            chapter: chapNum
+          };
+          setWords([newEntry, ...words]);
+          alert("नयाँ शब्द थपियो!");
+        }
+
+        setKrInput('');
+        setNpInput('');
+        setCatInput('');
+        setChapterInput('');
+      };
+
+      const handleStartEdit = (item, e) => {
+        e.stopPropagation();
+        setEditingId(item.id);
+        setKrInput(item.kr);
+        setNpInput(item.np);
+        setCatInput(item.category);
+        setChapterInput(item.chapter !== undefined ? item.chapter : '');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const handleCancelEdit = () => {
+        setEditingId(null);
+        setKrInput('');
+        setNpInput('');
+        setCatInput('');
+        setChapterInput('');
+      };
+
+      // Click to Toggle Selection
+      const handleToggleSelect = (id) => {
+        if (selectedIds.includes(id)) {
+          setSelectedIds(selectedIds.filter(item => item !== id));
+        } else {
+          setSelectedIds([...selectedIds, id]);
+        }
+      };
+
+      const handleSelectAll = (filteredList) => {
+        const filteredIds = filteredList.map(item => item.id);
+        const isAllSelected = filteredIds.length > 0 && filteredIds.every(id => selectedIds.includes(id));
+
+        if (isAllSelected) {
+          setSelectedIds(selectedIds.filter(id => !filteredIds.includes(id)));
+        } else {
+          const newSelection = Array.from(new Set([...selectedIds, ...filteredIds]));
+          setSelectedIds(newSelection);
+        }
+      };
+
+      // Delete Selected
+      const handleDeleteSelected = () => {
+        if (selectedIds.length === 0) {
+          alert("कृपया कम्तीमा एउटा शब्द Select गर्नुहोस्!");
+          return;
+        }
+
+        if (confirm(`के तपाईं Select गरिएका ${selectedIds.length} वटा शब्दहरू हटाउन निश्चित हुनुहुन्छ?`)) {
+          setWords(words.filter(w => !selectedIds.includes(w.id)));
+          if (editingId && selectedIds.includes(editingId)) {
+            handleCancelEdit();
+          }
+          setSelectedIds([]);
+        }
+      };
+
+      // Export with Passkey
+      const handleExportExcel = () => {
+        const userKey = prompt("🔒 Export गर्न Passkey/Password राख्नुहोस्:");
+        if (userKey === null) return;
+
+        if (userKey !== SECRET_PASSKEY) {
+          alert("❌ गलत Passkey! Export ब्लक गरियो।");
+          return;
+        }
+
+        const dataToExport = selectedChapter === 'All' 
+          ? words 
+          : selectedChapter === 'Blank'
+          ? words.filter(w => !w.chapter)
+          : words.filter(w => w.chapter === parseInt(selectedChapter));
+
+        if (dataToExport.length === 0) {
+          alert("Export गर्नका लागि कुनै शब्द भेटिएन!");
+          return;
+        }
+
+        const exportFormatted = dataToExport.map((item, index) => ({
+          "S.N.": index + 1,
+          "Chapter": item.chapter || "-",
+          "Korean": item.kr,
+          "Nepali": item.np,
+          "Category": item.category
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportFormatted);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Words");
+
+        const fileName = selectedChapter === 'All' 
+          ? "Korean_Dictionary_All.xlsx" 
+          : `Korean_Dictionary_Chapter_${selectedChapter}.xlsx`;
+
+        XLSX.writeFile(workbook, fileName);
+      };
+
+      // Import with Passkey
+      const handleImportExcel = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const userKey = prompt("🔒 Import गर्न Passkey/Password राख्नुहोस्:");
+        if (userKey === null) {
+          e.target.value = '';
+          return;
+        }
+
+        if (userKey !== SECRET_PASSKEY) {
+          alert("❌ गलत Passkey! Import ब्लक गरियो।");
+          e.target.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            const importedWords = jsonData.map((row, index) => ({
+              id: Date.now() + index,
+              kr: row["Korean"] || row["ko"] || row["kr"] || "",
+              np: row["Nepali"] || row["ne"] || row["np"] || "",
+              category: row["Category"] || row["category"] || "",
+              chapter: row["Chapter"] ? parseInt(row["Chapter"]) : ''
+            })).filter(w => w.kr && w.np);
+
+            if (importedWords.length > 0) {
+              setWords(prev => [...importedWords, ...prev]);
+              alert(`✅ ${importedWords.length} वटा शब्द सफलतापूर्वक थपियो!`);
+            } else {
+              alert("Excel मा डाटा भेटिएन। Header हरू: Chapter, Korean, Nepali, Category हुनुपर्छ।");
+            }
+          } catch (error) {
+            alert("Excel फाइल अपलोड गर्दा त्रुटि भयो।");
+          }
+        };
+
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+      };
+
+      // Search & Chapter Filter Logic
+      const filteredWords = words.filter(w => {
+        const matchesChapter = selectedChapter === 'All' 
+          ? true 
+          : selectedChapter === 'Blank'
+          ? !w.chapter
+          : w.chapter === parseInt(selectedChapter);
+
+        const matchesSearch = w.kr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              w.np.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              w.category.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesChapter && matchesSearch;
+      });
+
+      const isAllFilteredSelected = filteredWords.length > 0 && filteredWords.every(item => selectedIds.includes(item.id));
+
+      return (
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          {/* Header */}
+          <header className="bg-blue-900 text-white p-6 rounded-2xl shadow-lg mb-6 text-center border-b-4 border-amber-400">
+            <h1 className="text-2xl md:text-3xl font-black tracking-wide">
+              कोरियाली-नेपाली डिक्सनरी 
+            </h1>
+            <p className="text-xs md:text-sm text-blue-200 mt-1">
+              Chapterwise Dictionary with Accurate Pronunciation
+            </p>
+          </header>
+
+          {/* Search, Filter & Tools */}
+          <div className="bg-white p-4 rounded-xl shadow border border-slate-200 mb-6">
+            <div className="flex justify-between items-center mb-3 border-b pb-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">खोज तथा फिल्टर</span>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleExportExcel}
+                  title="Export Excel"
+                  className="bg-transparent text-lg hover:scale-110 active:scale-95 transition opacity-70 hover:opacity-100"
+                >
+                  📊
+                </button>
+                <label
+                  title="Import Excel"
+                  className="bg-transparent text-lg hover:scale-110 active:scale-95 cursor-pointer transition opacity-70 hover:opacity-100"
+                >
+                  📂
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleImportExcel}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="col-span-1">
+                <label className="block text-xs font-bold text-slate-600 mb-1">📖 Chapter अनुसार हेर्नुहोस्:</label>
+                <select
+                  value={selectedChapter}
+                  onChange={(e) => setSelectedChapter(e.target.value)}
+                  className="w-full p-3 border border-slate-300 rounded-xl font-bold bg-amber-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="All">All Chapters (1-60)</option>
+                  <option value="Blank">Select Chapter</option>
+                  {Array.from({ length: 60 }, (_, i) => i + 1).map((num) => (
+                    <option key={num} value={num}>
+                      Chapter {num}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-xs font-bold text-slate-600 mb-1">🔍 खोज्नुहोस् (Search):</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="कोरियाली वा नेपालीमा खोज्नुहोस्..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-bold text-slate-800"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-3 text-xs font-bold text-slate-400 hover:text-slate-600"
+                    >
+                      ✖ Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Form */}
+          <div className={`p-5 rounded-xl shadow border mb-6 transition ${
+            editingId !== null ? 'bg-amber-50 border-amber-300' : 'bg-white border-slate-200'
+          }`}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                {editingId !== null ? '✏️ शब्द सम्पादन गर्नुहोस्' : '➕ नयाँ शब्द थप्नुहोस्'}
+              </h3>
+              {editingId !== null && (
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded font-bold text-slate-700"
+                >
+                  रद्द (Cancel)
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <select
+                value={chapterInput}
+                onChange={(e) => setChapterInput(e.target.value)}
+                className="p-2.5 border rounded-lg text-sm font-bold bg-white text-slate-700"
+              >
+                <option value="">Select Chapter:-</option>
+                {Array.from({ length: 60 }, (_, i) => i + 1).map((num) => (
+                  <option key={num} value={num}>Chapter {num}</option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                placeholder="कोरियाली शब्द"
+                value={krInput}
+                onChange={(e) => setKrInput(e.target.value)}
+                className="p-2.5 border rounded-lg text-sm font-bold bg-white"
+              />
+              <input
+                type="text"
+                placeholder="नेपाली अर्थ"
+                value={npInput}
+                onChange={(e) => setNpInput(e.target.value)}
+                className="p-2.5 border rounded-lg text-sm bg-white"
+              />
+              <input
+                type="text"
+                placeholder="Category"
+                value={catInput}
+                onChange={(e) => setCatInput(e.target.value)}
+                className="p-2.5 border rounded-lg text-sm bg-white"
+              />
+              <button
+                type="submit"
+                className={`font-bold py-2.5 px-4 rounded-lg shadow text-sm transition text-white ${
+                  editingId !== null ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
+              >
+                {editingId !== null ? '💾 अपडेट' : '➕ Save'}
+              </button>
+            </form>
+          </div>
+
+          {/* Word List with Click-to-Select */}
+          <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+            {/* Action Bar */}
+            <div className="bg-slate-800 text-white px-5 py-3 flex flex-wrap justify-between items-center gap-2 text-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleSelectAll(filteredWords)}
+                  className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded border border-slate-500 text-xs font-bold transition"
+                >
+                  {isAllFilteredSelected ? "सबै Unselect गर्नुहोस्" : "सबै Select गर्नुहोस्"}
+                </button>
+                <span className="text-xs text-slate-300">
+                  (जम्मा: {filteredWords.length} | Select भएका: {selectedIds.length})
+                </span>
+              </div>
+
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow flex items-center gap-1 transition"
+                >
+                  🗑️ Select गरिएका हटाउनुहोस् ({selectedIds.length})
+                </button>
+              )}
+            </div>
+
+            {filteredWords.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 font-bold">
+                कुनै शब्द भेटिएन।
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 select-none">
+                {filteredWords.map((item) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => handleToggleSelect(item.id)}
+                      className={`p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer transition border-l-4 ${
+                        isSelected 
+                          ? 'bg-blue-50/80 border-blue-600 shadow-inner' 
+                          : 'hover:bg-slate-50 border-transparent'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-xl font-black ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
+                            {item.kr}
+                          </span>
+                          {item.category && (
+                            <span className="text-xs bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-base font-bold text-emerald-700">{item.np}</p>
+                      </div>
+
+                      {/* Buttons */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            speakKorean(item.kr);
+                          }}
+                          className="p-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg border border-blue-200 text-xs font-bold flex items-center gap-1"
+                        >
+                          🔊 
+                        </button>
+                        <button
+                          onClick={(e) => handleStartEdit(item, e)}
+                          className="p-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 text-xs font-bold"
+                        >
+                          ✏️ 
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
